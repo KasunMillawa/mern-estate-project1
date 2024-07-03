@@ -16,7 +16,8 @@ export const updateUser = async(req , res , next) => {
         if(req.body.password){
            req.body.password  = bcrptjs.hashSync(req.body.password, 10);
         }
-    const updateUser = await User.findByIdAndUpdate(req.parms.id,{
+    const updateUser = await User.findByIdAndUpdate(req.params.id,
+        {
 
     
             $set:{
@@ -31,7 +32,7 @@ export const updateUser = async(req , res , next) => {
 
         res.status(200).json(rest);
     } catch (error) {
-        next(error)
+        next(error);
         
     }    
 
