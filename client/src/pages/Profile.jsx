@@ -2,15 +2,19 @@ import { useSelector } from "react-redux";
 import { useRef, useState, useEffect } from "react";
 import {getDownloadURL, getStorage, ref, uploadBytesResumable} from 'firebase/storage';
 import { app } from "../firebase";
+import { updateUserStart, updateUserSuccess, updateUserFailure } from "../redux/user/userSlice";
+import { useDispatch } from "react-redux";
 
 
 export default function Profile() {
   const fileRef = useRef(null);
-  const {currentUser} = useSelector((state) => state.user);
+  const {currentUser, loading, error } = useSelector((state) => state.user);
   const [file , setfile] = useState(undefined);
   const [filePerc , setFilePerc] = useState(0);
   const [fileUploadError, setFileUploadError] = useState(false);
   const [formData , setFormData] = useState({});
+  const dispatch = useDispatch();
+  
  
 
   //firebase storage
@@ -49,14 +53,43 @@ useEffect(() => {
 
       );
       }
-    )
+    );
  };
  
+const handleChange = (e) => {
+  setFormData({...formData, [e.target.id]: e.target.value});
+};
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser.
+        _id}`,
+
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type' : 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+        const data = await res.json();
+        if (data.success === false) {
+          dispatch(updateUserFailure(data.message));
+          return;
+        }
+        
+        dispatch(updateUserSuccess(data));
+    } catch (error) {
+      dispatch(updateUserFailure(error.message));
+    }
+  };
   return (
     <div className="p-3 max-w-lg mx-auto" >
       <h1 className='text-3xl font-semibold text-center my-6'>profile</h1>
-      <form className='flex flex-col gap-4'> 
+      <form onSubmit={handleSubmit} className='flex flex-col gap-4'> 
 
       <input onChange={(e) => setfile(e.target.files[0])} type="file" ref={fileRef} hidden accept="image/*"/>
 
@@ -75,12 +108,16 @@ useEffect(() => {
       } 
       </p>
 
-      <input type="text" placeholder="username"id="username" className="border p-3 rounded-lg" />
-      <input type="text" placeholder="email"id="email" className="border p-3 rounded-lg" />
-      <input type="text" placeholder="password"id="password" className="border p-3 rounded-lg" />
+      <input type="text" placeholder="username" 
+      defaultValue={currentUser.username} id="username" className="border p-3 rounded-lg" onChange={handleChange} />
+
+      <input type="text" placeholder="email" 
+      defaultValue={currentUser.email} id="email" className="border p-3 rounded-lg" onChange={handleChange} />
+
+      <input type="password" placeholder="password" onChange={handleChange} id="password" className="border p-3 rounded-lg"  />
 
       <button className="bg-slate-700 text-white rounded-lg p-3 uppercase
-      hover:opacity-95 disabled:opacity-80">update</button>
+      hover:opacity-95 disabled:opacity-80">{loading ? 'Loading...' : 'Update'}</button>
       </form>
 
       <div className="flex justify-between mt-5">
