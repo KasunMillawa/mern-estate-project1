@@ -229,7 +229,11 @@ const handleChange = (e) => {
       </Link>
       <div className="flex flex-col items-center">
         <button  onClick={()=> handleListingDelete(listing._id)} className="text-red-600 uppercase">delete</button>
+
+        <Link to={`/update-listing/${listing._id}`}>
         <button className="text-green-600 uppercase">edit</button>
+        </Link>
+
       </div>
     </div>
        ))}
